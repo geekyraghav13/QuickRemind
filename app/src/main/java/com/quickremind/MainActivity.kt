@@ -13,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -69,7 +70,8 @@ fun AppNavigator() {
 @Composable
 fun MainScreen(navController: NavController, viewModel: ReminderViewModel) {
     val reminders by viewModel.allReminders.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDetailsDialog by remember { mutableStateOf(false) } // New state for details dialog
     var selectedReminder by remember { mutableStateOf<Reminder?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -90,19 +92,32 @@ fun MainScreen(navController: NavController, viewModel: ReminderViewModel) {
             }
         }
     ) { padding ->
-        if (showDialog && selectedReminder != null) {
+        // --- DELETE CONFIRMATION DIALOG ---
+        if (showDeleteDialog && selectedReminder != null) {
             AlertDialog(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Mark as Complete?") },
                 text = { Text("Are you sure you want to mark this reminder as complete?") },
                 confirmButton = {
                     Button(onClick = {
                         selectedReminder?.let { viewModel.deleteReminder(it) }
-                        showDialog = false
+                        showDeleteDialog = false
                     }) { Text("OK") }
                 },
                 dismissButton = {
-                    Button(onClick = { showDialog = false }) { Text("Cancel") }
+                    Button(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                }
+            )
+        }
+
+        // --- NEW: DETAILS DIALOG ---
+        if (showDetailsDialog && selectedReminder != null) {
+            AlertDialog(
+                onDismissRequest = { showDetailsDialog = false },
+                title = { Text(selectedReminder?.title ?: "Details") },
+                text = { Text(selectedReminder?.notes ?: "No notes for this reminder.") },
+                confirmButton = {
+                    Button(onClick = { showDetailsDialog = false }) { Text("OK") }
                 }
             )
         }
@@ -139,11 +154,14 @@ fun MainScreen(navController: NavController, viewModel: ReminderViewModel) {
                     }
                 ) {
                     ReminderItem(
-                        title = reminder.title,
-                        dateTime = formatDateTime(reminder.reminderTime),
+                        reminder = reminder,
                         onMarkAsComplete = {
                             selectedReminder = reminder
-                            showDialog = true
+                            showDeleteDialog = true
+                        },
+                        onClick = { // New click handler
+                            selectedReminder = reminder
+                            showDetailsDialog = true
                         }
                     )
                 }
@@ -152,6 +170,7 @@ fun MainScreen(navController: NavController, viewModel: ReminderViewModel) {
     }
 }
 
+// ... (AddReminderScreen code remains the same) ...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReminderScreen(navController: NavController, viewModel: ReminderViewModel) {
@@ -178,7 +197,7 @@ fun AddReminderScreen(navController: NavController, viewModel: ReminderViewModel
     }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false)
 
     Scaffold(topBar = {
-        TopAppBar( // <-- THIS WAS THE ERROR. IT'S NOW CORRECTED.
+        TopAppBar(
             title = { Text("New Reminder") },
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -211,9 +230,19 @@ fun AddReminderScreen(navController: NavController, viewModel: ReminderViewModel
     }
 }
 
+
 @Composable
-fun ReminderItem(title: String, dateTime: String, onMarkAsComplete: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
+fun ReminderItem(
+    reminder: Reminder,
+    onMarkAsComplete: () -> Unit,
+    onClick: () -> Unit // New parameter
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick), // Make the whole item clickable
+        color = MaterialTheme.colorScheme.background
+    ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -221,13 +250,14 @@ fun ReminderItem(title: String, dateTime: String, onMarkAsComplete: () -> Unit) 
         ) {
             RadioButton(selected = false, onClick = onMarkAsComplete)
             Column {
-                Text(text = title, fontSize = 18.sp)
-                Text(text = dateTime, color = Color.Gray)
+                Text(text = reminder.title, fontSize = 18.sp)
+                Text(text = formatDateTime(reminder.reminderTime), color = Color.Gray)
             }
         }
     }
 }
 
+// ... (formatter functions remain the same) ...
 fun formatDateTime(timeInMillis: Long): String {
     val sdf = SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault())
     return sdf.format(Date(timeInMillis))
@@ -242,4 +272,3 @@ fun formatShortTime(timeInMillis: Long): String {
     val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
     return sdf.format(Date(timeInMillis))
 }
-
