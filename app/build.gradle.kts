@@ -1,7 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt") // This plugin is required for Room
+    id("kotlin-kapt")
+    id("com.google.gms.google-services") // Required for Firebase
 }
 
 android {
@@ -11,8 +12,8 @@ android {
     defaultConfig {
         applicationId = "com.quickremind"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 35
+        versionCode = 3
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -46,7 +47,14 @@ android {
 }
 
 dependencies {
-    // Core & UI with Jetpack Compose
+    // --- For Firebase ---
+    // Bill of Materials (BoM) to manage Firebase library versions
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    // Firebase Cloud Messaging for push notifications
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+
+    // --- Core & UI with Jetpack Compose ---
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.2")
@@ -56,18 +64,16 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
 
-    // Navigation for switching between screens
+    // --- Navigation ---
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // ✅ Room Database (for Day 2) – Corrected block
+    // --- Room Database ---
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
-
-    // Add these lines for testing
     kaptAndroidTest("androidx.room:room-compiler:2.6.1")
     kaptTest("androidx.room:room-compiler:2.6.1")
 
-    // Google AdMob (for Day 4)
+    // --- Google AdMob ---
     implementation("com.google.android.gms:play-services-ads:23.0.0")
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "186210411901",
+    "project_id": "quickremind-8274e",
+    "storage_bucket": "quickremind-8274e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186210411901:android:59bf9385424faf08e99814",
+        "android_client_info": {
+          "package_name": "com.quickremind"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI_Imhruwa5m7smeADzFJbT_0ehUqOPS8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
